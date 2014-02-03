@@ -21,6 +21,7 @@ public class TRTGUIui extends javax.swing.JFrame {
 
     double lastAsk, lastBid;
     Boolean alerting;
+    TRTEmail email;
     final int REFRESH_RATE = 1500;
     final int SEND_TIME = 250;
     //update last bid and last ask, then verify it for sending alert email
@@ -64,41 +65,42 @@ public class TRTGUIui extends javax.swing.JFrame {
 
                 //alerting is set? send (right) email
                 if (alerting == true) {
-                    
+
                     //check for more trigger to come
-                    if (!bidMinCheckBox.isSelected() && !bidMagCheckBox.isSelected() && !askMagCheckBox.isSelected() && !askMinCheckBox.isSelected())
+                    if (!bidMinCheckBox.isSelected() && !bidMagCheckBox.isSelected() && !askMagCheckBox.isSelected() && !askMinCheckBox.isSelected()) {
                         callStop();
-                    
+                    }
+
                     if (bidMinCheckBox.isSelected() && lastBid < Double.parseDouble(bidMinAlertText.getText())) {
                         bidMinCheckBox.setSelected(false);
                         bidMinSituationLabel.setText("TRIGGERED!");
                         bidMinSituationLabel.setForeground(Color.green);
-                        new TRTEmail("BID - LESS THAN " + bidMinAlertText.getText(), emailTextField.getText(), smtpTextField.getText()).send();
-                    Thread.sleep(SEND_TIME);
+                        email.send("BID - LESS THAN " + bidMinAlertText.getText(), "");
+                        Thread.sleep(SEND_TIME);
                     }
 
                     if (bidMagCheckBox.isSelected() && lastBid > Double.parseDouble(bidMagAlertText.getText())) {
                         bidMagCheckBox.setSelected(false);
                         bidMagSituationLabel.setText("TRIGGERED!");
                         bidMagSituationLabel.setForeground(Color.green);
-                        new TRTEmail("BID - GREATER THAN " + bidMagAlertText.getText(), emailTextField.getText(), smtpTextField.getText()).send();
-                    Thread.sleep(SEND_TIME);
+                        email.send("BID - GREATER THAN " + bidMagAlertText.getText(), "");
+                        Thread.sleep(SEND_TIME);
                     }
 
                     if (askMagCheckBox.isSelected() && lastAsk > Double.parseDouble(askMagAlertText.getText())) {
                         askMagCheckBox.setSelected(false);
                         askMagSituationLabel.setText("TRIGGERED!");
                         askMagSituationLabel.setForeground(Color.green);
-                        new TRTEmail("ASK - GREATER THAN " + askMagAlertText.getText(), emailTextField.getText(), smtpTextField.getText()).send();
-                    Thread.sleep(SEND_TIME);
+                        email.send("ASK - GREATER THAN " + askMagAlertText.getText(), "");
+                        Thread.sleep(SEND_TIME);
                     }
 
                     if (askMinCheckBox.isSelected() && lastAsk < Double.parseDouble(askMinAlertText.getText())) {
                         askMinCheckBox.setSelected(false);
                         askMinSituationLabel.setText("TRIGGERED!");
                         askMinSituationLabel.setForeground(Color.green);
-                        new TRTEmail("ASK - LESS THAN " + askMinAlertText.getText(), emailTextField.getText(), smtpTextField.getText()).send();
-                    Thread.sleep(SEND_TIME);
+                        email.send("ASK - LESS THAN " + askMinAlertText.getText(), "");
+                        Thread.sleep(SEND_TIME);
                     }
                 }
                 Thread.sleep(REFRESH_RATE);
@@ -147,8 +149,7 @@ public class TRTGUIui extends javax.swing.JFrame {
         jButton1 = new javax.swing.JButton();
         jPanel1 = new javax.swing.JPanel();
         emailTextField = new javax.swing.JTextField();
-        usernameTextField = new javax.swing.JTextField();
-        passwordTextField = new javax.swing.JTextField();
+        userText = new javax.swing.JTextField();
         emailLabel = new javax.swing.JLabel();
         userLabel = new javax.swing.JLabel();
         passwordLabel = new javax.swing.JLabel();
@@ -157,6 +158,8 @@ public class TRTGUIui extends javax.swing.JFrame {
         jLabel8 = new javax.swing.JLabel();
         smtpTextField = new javax.swing.JTextField();
         jLabel4 = new javax.swing.JLabel();
+        passwordText = new javax.swing.JPasswordField();
+        enableAuthCheck = new javax.swing.JCheckBox();
         jPanel2 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
         askValueLabel = new javax.swing.JLabel();
@@ -235,11 +238,13 @@ public class TRTGUIui extends javax.swing.JFrame {
             }
         });
 
-        usernameTextField.setText("username");
-        usernameTextField.setEnabled(false);
-
-        passwordTextField.setText("password");
-        passwordTextField.setEnabled(false);
+        userText.setText("username");
+        userText.setEnabled(false);
+        userText.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                userTextMouseClicked(evt);
+            }
+        });
 
         emailLabel.setText("email");
 
@@ -256,7 +261,7 @@ public class TRTGUIui extends javax.swing.JFrame {
             }
         });
 
-        smtpComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "alice", "custom" }));
+        smtpComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "alice", "gmail" }));
         smtpComboBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 smtpComboBoxActionPerformed(evt);
@@ -270,6 +275,18 @@ public class TRTGUIui extends javax.swing.JFrame {
 
         jLabel4.setText("Provider");
 
+        passwordText.setText("jPasswordField1");
+        passwordText.setEnabled(false);
+        passwordText.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                passwordTextMouseClicked(evt);
+            }
+        });
+
+        enableAuthCheck.setSelected(true);
+        enableAuthCheck.setText("Enable authentication");
+        enableAuthCheck.setEnabled(false);
+
         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -277,28 +294,33 @@ public class TRTGUIui extends javax.swing.JFrame {
             .add(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jPanel1Layout.createSequentialGroup()
-                        .add(jLabel4)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                        .add(smtpComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(jLabel8)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(smtpTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 254, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(jPanel1Layout.createSequentialGroup()
-                        .add(emailLabel)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                        .add(emailTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 273, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(testEmailButton))
-                    .add(jPanel1Layout.createSequentialGroup()
-                        .add(userLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 35, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(usernameTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 108, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(passwordLabel)
-                        .add(18, 18, 18)
-                        .add(passwordTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                    .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                        .add(jPanel1Layout.createSequentialGroup()
+                            .add(jLabel4)
+                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                            .add(smtpComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                            .add(jLabel8)
+                            .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                            .add(smtpTextField))
+                        .add(jPanel1Layout.createSequentialGroup()
+                            .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                                .add(jPanel1Layout.createSequentialGroup()
+                                    .add(emailLabel)
+                                    .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                                    .add(emailTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 273, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))
+                                .add(jPanel1Layout.createSequentialGroup()
+                                    .add(userLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 35, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                    .add(userText)
+                                    .add(18, 18, 18)
+                                    .add(passwordLabel)
+                                    .add(16, 16, 16)))
+                            .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                                .add(testEmailButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .add(passwordText))))
+                    .add(enableAuthCheck))
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -317,10 +339,11 @@ public class TRTGUIui extends javax.swing.JFrame {
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(userLabel)
-                    .add(usernameTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(userText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(passwordLabel)
-                    .add(passwordTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(27, Short.MAX_VALUE))
+                    .add(passwordText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .add(enableAuthCheck))
         );
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Actual prices"));
@@ -544,11 +567,11 @@ public class TRTGUIui extends javax.swing.JFrame {
         chartPanel.setLayout(chartPanelLayout);
         chartPanelLayout.setHorizontalGroup(
             chartPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 253, Short.MAX_VALUE)
+            .add(0, 0, Short.MAX_VALUE)
         );
         chartPanelLayout.setVerticalGroup(
             chartPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 269, Short.MAX_VALUE)
+            .add(0, 267, Short.MAX_VALUE)
         );
 
         jLabel5.setText("if you like this software please consider donating. BTC: 19u1hqFUSoryHdwWb43iQFHgxrE2YyVB8T");
@@ -583,7 +606,7 @@ public class TRTGUIui extends javax.swing.JFrame {
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(jPanel2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                             .add(jLabel5))
-                        .add(0, 0, Short.MAX_VALUE))))
+                        .add(0, 21, Short.MAX_VALUE))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -609,34 +632,44 @@ public class TRTGUIui extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void startAlertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startAlertButtonActionPerformed
+        if (enableAuthCheck.isSelected()) {
+            email = new TRTEmail(smtpTextField.getText(), emailTextField.getText(), true, userText.getText(), passwordText.getText());
+        } else {
+            email = new TRTEmail(smtpTextField.getText(), emailTextField.getText());
+        }
+
 
         if (bidMagAlertText.getText().isEmpty()) {
             bidMagCheckBox.setSelected(false);
             bidMagAlertLabel.setEnabled(false);
-        }else
+        } else {
             bidMagSituationLabel.setText("waiting...");
-        
+        }
+
 
         if (bidMinAlertText.getText().isEmpty()) {
             bidMinCheckBox.setSelected(false);
             bidMinAlertLabel.setEnabled(false);
-        }else
+        } else {
             bidMinSituationLabel.setText("waiting...");
-        
+        }
+
 
         if (askMagAlertText.getText().isEmpty()) {
             askMagCheckBox.setSelected(false);
             askMagAlertLabel.setEnabled(false);
-        }else
+        } else {
             askMagSituationLabel.setText("waiting...");
-        
+        }
+
 
         if (askMinAlertText.getText().isEmpty()) {
             askMinCheckBox.setSelected(false);
             askMinAlertLabel.setEnabled(false);
-        }else
+        } else {
             askMinSituationLabel.setText("waiting...");
-        
+        }
+
 
         emailTextField.setEnabled(false);
         testEmailButton.setEnabled(false);
@@ -653,6 +686,11 @@ public class TRTGUIui extends javax.swing.JFrame {
         askMagCheckBox.setEnabled(false);
         bidMinCheckBox.setEnabled(false);
         bidMagCheckBox.setEnabled(false);
+
+        userLabel.setEnabled(false);
+        userText.setEnabled(false);
+        passwordLabel.setEnabled(false);
+        passwordText.setEnabled(false);
 
 
         stopAlertButton.setEnabled(true);
@@ -672,8 +710,8 @@ public class TRTGUIui extends javax.swing.JFrame {
         askMagAlertText.setEnabled(askMagCheckBox.isSelected());
     }//GEN-LAST:event_askMagCheckBoxActionPerformed
 
-    private void callStop(){
-      alerting = false;
+    private void callStop() {
+        alerting = false;
         stopAlertButton.setEnabled(false);
         startAlertButton.setEnabled(true);
         emailTextField.setEnabled(true);
@@ -686,7 +724,7 @@ public class TRTGUIui extends javax.swing.JFrame {
         askMinSituationLabel.setForeground(Color.WHITE);
         bidMagSituationLabel.setForeground(Color.WHITE);
         askMagSituationLabel.setForeground(Color.WHITE);
-        
+
         bidMinSituationLabel.setText("");
         askMinSituationLabel.setText("");
         bidMagSituationLabel.setText("");
@@ -703,9 +741,15 @@ public class TRTGUIui extends javax.swing.JFrame {
         askMagCheckBox.setEnabled(true);
         bidMinCheckBox.setEnabled(true);
         bidMagCheckBox.setEnabled(true);
+
+        //re-enabling auth
+        userLabel.setEnabled(enableAuthCheck.isSelected());
+        userText.setEnabled(enableAuthCheck.isSelected());
+        passwordLabel.setEnabled(enableAuthCheck.isSelected());
+        passwordText.setEnabled(enableAuthCheck.isSelected());
     }
     private void stopAlertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopAlertButtonActionPerformed
-      callStop();
+        callStop();
     }//GEN-LAST:event_stopAlertButtonActionPerformed
 
     private void bidMagCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bidMagCheckBoxActionPerformed
@@ -744,16 +788,28 @@ public class TRTGUIui extends javax.swing.JFrame {
 
     private void smtpComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_smtpComboBoxActionPerformed
 
-        smtpTextField.setEnabled(smtpComboBox.getSelectedItem().equals("custom"));
-        if(smtpComboBox.getSelectedItem().equals("tiscali"))
-                smtpTextField.setText("smtp.tiscali.it");
-        if(smtpComboBox.getSelectedItem().equals("alice"))
-                smtpTextField.setText("out.alice.it");
+
+        if (smtpComboBox.getSelectedItem().equals("gmail")) {
+            userLabel.setEnabled(true);
+            userText.setEnabled(true);
+            passwordLabel.setEnabled(true);
+            passwordText.setEnabled(true);
+            enableAuthCheck.setSelected(true);
+            smtpTextField.setText("smtp.gmail.com");
+        }
+        if (smtpComboBox.getSelectedItem().equals("alice")) {
+            userLabel.setEnabled(false);
+            userText.setEnabled(false);
+            passwordLabel.setEnabled(false);
+            passwordText.setEnabled(false);
+            enableAuthCheck.setSelected(false);
+            smtpTextField.setText("out.alice.it");
+        }
     }//GEN-LAST:event_smtpComboBoxActionPerformed
 
     private void testEmailButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_testEmailButtonActionPerformed
         //new test email
-        new TRTEmail("TEST EMAIL -- TRTGUI", "The setup is corrected.", emailTextField.getText(), smtpTextField.getText()).send();
+        new TRTEmail(smtpTextField.getText(), emailTextField.getText()).send("TEST EMAIL -- TRTGUI", "The setup is working.");
     }//GEN-LAST:event_testEmailButtonActionPerformed
 
     private void emailTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_emailTextFieldActionPerformed
@@ -765,10 +821,20 @@ public class TRTGUIui extends javax.swing.JFrame {
     }//GEN-LAST:event_emailTextFieldMouseClicked
 
     private void ExitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ExitButtonActionPerformed
-        // TODO add your handling code here:
+
         this.dispose();
         System.exit(0);
     }//GEN-LAST:event_ExitButtonActionPerformed
+
+    private void passwordTextMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_passwordTextMouseClicked
+
+        passwordText.setText(null);
+    }//GEN-LAST:event_passwordTextMouseClicked
+
+    private void userTextMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_userTextMouseClicked
+
+        userText.setText(null);
+    }//GEN-LAST:event_userTextMouseClicked
 
     /**
      * @param args the command line arguments
@@ -829,6 +895,7 @@ public class TRTGUIui extends javax.swing.JFrame {
     private javax.swing.JPanel chartPanel;
     private javax.swing.JLabel emailLabel;
     private javax.swing.JTextField emailTextField;
+    private javax.swing.JCheckBox enableAuthCheck;
     private javax.swing.JDialog errorEmail;
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
@@ -841,13 +908,13 @@ public class TRTGUIui extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JLabel passwordLabel;
-    private javax.swing.JTextField passwordTextField;
+    private javax.swing.JPasswordField passwordText;
     private javax.swing.JComboBox smtpComboBox;
     private javax.swing.JTextField smtpTextField;
     private javax.swing.JButton startAlertButton;
     private javax.swing.JButton stopAlertButton;
     private javax.swing.JButton testEmailButton;
     private javax.swing.JLabel userLabel;
-    private javax.swing.JTextField usernameTextField;
+    private javax.swing.JTextField userText;
     // End of variables declaration//GEN-END:variables
 }
