@@ -22,7 +22,7 @@ public class TRTGUIui extends javax.swing.JFrame {
     double lastAsk, lastBid;
     Boolean alerting;
     TRTEmail email;
-    final int REFRESH_RATE = 1500;
+    int REFRESH_RATE = 2000;
     final int SEND_TIME = 250;
     //update last bid and last ask, then verify it for sending alert email
     SwingWorker jsonPriceUpdater = new SwingWorker<Void, Void>() {
@@ -66,11 +66,6 @@ public class TRTGUIui extends javax.swing.JFrame {
                 //alerting is set? send (right) email
                 if (alerting == true) {
 
-                    //check for more trigger to come
-                    if (!bidMinCheckBox.isSelected() && !bidMagCheckBox.isSelected() && !askMagCheckBox.isSelected() && !askMinCheckBox.isSelected()) {
-                        callStop();
-                    }
-
                     if (bidMinCheckBox.isSelected() && lastBid < Double.parseDouble(bidMinAlertText.getText())) {
                         bidMinCheckBox.setSelected(false);
                         bidMinSituationLabel.setText("TRIGGERED!");
@@ -101,6 +96,11 @@ public class TRTGUIui extends javax.swing.JFrame {
                         askMinSituationLabel.setForeground(Color.green);
                         email.send("ASK - LESS THAN " + askMinAlertText.getText(), "");
                         Thread.sleep(SEND_TIME);
+                    }
+                    
+                    //check for more trigger to come
+                    if (!bidMinCheckBox.isSelected() && !bidMagCheckBox.isSelected() && !askMagCheckBox.isSelected() && !askMinCheckBox.isSelected()) {
+                        callStop();
                     }
                 }
                 Thread.sleep(REFRESH_RATE);
@@ -165,6 +165,9 @@ public class TRTGUIui extends javax.swing.JFrame {
         askValueLabel = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
         bidValueLabel = new javax.swing.JLabel();
+        jLabel6 = new javax.swing.JLabel();
+        refreshPricesSpinner = new javax.swing.JSpinner();
+        jLabel7 = new javax.swing.JLabel();
         jPanel3 = new javax.swing.JPanel();
         bidMinAlertLabel = new javax.swing.JLabel();
         bidMinAlertText = new javax.swing.JTextField();
@@ -356,22 +359,43 @@ public class TRTGUIui extends javax.swing.JFrame {
 
         bidValueLabel.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
 
+        jLabel6.setText("Refresh rate");
+
+        refreshPricesSpinner.setModel(new javax.swing.SpinnerNumberModel(2, 1, 60, 1));
+        refreshPricesSpinner.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                refreshPricesSpinnerStateChanged(evt);
+            }
+        });
+        refreshPricesSpinner.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+            public void propertyChange(java.beans.PropertyChangeEvent evt) {
+                refreshPricesSpinnerPropertyChange(evt);
+            }
+        });
+
+        jLabel7.setText("Sec");
+
         org.jdesktop.layout.GroupLayout jPanel2Layout = new org.jdesktop.layout.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
-                .add(jLabel2)
+                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jLabel2)
+                    .add(jLabel1))
                 .add(18, 18, 18)
-                .add(askValueLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 79, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .add(jPanel2Layout.createSequentialGroup()
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .add(jLabel1)
-                .add(18, 18, 18)
-                .add(bidValueLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 81, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.CENTER)
+                    .add(bidValueLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 81, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(askValueLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 79, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 40, Short.MAX_VALUE)
+                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jLabel6)
+                    .add(jPanel2Layout.createSequentialGroup()
+                        .add(refreshPricesSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 45, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jLabel7)))
+                .add(14, 14, 14))
         );
 
         jPanel2Layout.linkSize(new java.awt.Component[] {askValueLabel, bidValueLabel}, org.jdesktop.layout.GroupLayout.HORIZONTAL);
@@ -388,6 +412,14 @@ public class TRTGUIui extends javax.swing.JFrame {
                     .add(jLabel2)
                     .add(askValueLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 16, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel2Layout.createSequentialGroup()
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .add(jLabel6)
+                .add(5, 5, 5)
+                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(refreshPricesSpinner, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(jLabel7))
+                .addContainerGap())
         );
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Alert"));
@@ -604,9 +636,11 @@ public class TRTGUIui extends javax.swing.JFrame {
                             .add(layout.createSequentialGroup()
                                 .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(jPanel2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                            .add(jLabel5))
-                        .add(0, 21, Short.MAX_VALUE))))
+                                .add(jPanel2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .add(layout.createSequentialGroup()
+                                .add(jLabel5)
+                                .add(0, 0, Short.MAX_VALUE)))
+                        .add(6, 6, 6))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -836,6 +870,16 @@ public class TRTGUIui extends javax.swing.JFrame {
         userText.setText(null);
     }//GEN-LAST:event_userTextMouseClicked
 
+    private void refreshPricesSpinnerPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_refreshPricesSpinnerPropertyChange
+        // TODO add your handling code here:
+ 
+    }//GEN-LAST:event_refreshPricesSpinnerPropertyChange
+
+    private void refreshPricesSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_refreshPricesSpinnerStateChanged
+        // TODO add your handling code here:
+               REFRESH_RATE=(int)refreshPricesSpinner.getValue()*1000;
+    }//GEN-LAST:event_refreshPricesSpinnerStateChanged
+
     /**
      * @param args the command line arguments
      */
@@ -903,12 +947,15 @@ public class TRTGUIui extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JLabel passwordLabel;
     private javax.swing.JPasswordField passwordText;
+    private javax.swing.JSpinner refreshPricesSpinner;
     private javax.swing.JComboBox smtpComboBox;
     private javax.swing.JTextField smtpTextField;
     private javax.swing.JButton startAlertButton;
